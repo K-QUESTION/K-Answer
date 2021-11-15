@@ -1,8 +1,10 @@
 #ifndef _AES_H_
 #define _AES_H_
 
-#include <stdint.h>
+#include <stdio.h>
 #include <stddef.h>
+#include <stdint.h>
+#include "memory.h" //"tyep.h"로 추후 수정
 
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
@@ -89,3 +91,6 @@ void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
 
 
 #endif // _AES_H_
+
+// void test_encrypt_ecb_verbose(void);
+void test_aes(uint8_t* key, uint8_t* pt);
