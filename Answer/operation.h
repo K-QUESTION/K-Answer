@@ -45,10 +45,10 @@ void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B);
 void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B); //void Long_Division
 
 /********** SQUARING ***********/
-void AA();
-void SQUC();
-void SQUK();
-void SQU();
+void AA(bigint** C, bigint* A);
+void SQUC(bigint** C, bigint* A);
+void SQUK(bigint** C, bigint* A);
+void SQU(bigint** C, bigint* A);
 
 /********** MOD_EXP ***********/
 void L2R(); //Left to Right

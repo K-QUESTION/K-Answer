@@ -702,7 +702,6 @@ void MUL(bigint** C, bigint* A, bigint* B)
 
 void MULC_K(bigint** C, bigint* A, bigint* B) // Fast Multiplication  //return R-> C
 {
-
 	int flag = 1;
 	int l = 0;
 
@@ -837,37 +836,6 @@ void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B) //void Long_Division
 
 	}
 
-	/*
-	for (int i = Word_Bit_Len - 1; i >= 0; --i)
-	{
-		if (Compare(*R, W) == BIGGER_FIRST_ARGUMENT || Compare(*R, W) == EQUAL_ARGUMENT)
-		{
-			exp2i(&tmp1, i);   // 2^i
-			ADD(Q, *Q, tmp1);   // Q <- Q + 2^i
-
-			bi_L_shift(R, *R, 1);   // 2R  // 왜인지 tmp 안 쓰면 짤림
-			SUB(R, *R, B);   // 2R - B
-			//bi_resize(&tmp2, tmp2->wordlen, 1);
-			tmp2->a[0] = bi_get_j_bit(A, i);   // a_j
-			ADD_ABc(R, *R, tmp2, 0, 0);   // R <- 2R + 1 - B
-		}
-		else
-		{
-			bi_set_zero(&tmp1);
-			bi_L_shift(R, *R, 1);   // 2R
-			tmp2->a[0] = bi_get_j_bit(A, i);   // a_j
-			ADD_ABc(R, *R, tmp2, 0, 0);   // R <- 2R + 1
-			if (Compare(*R, B) == BIGGER_FIRST_ARGUMENT || Compare(*R, B) == EQUAL_ARGUMENT)
-			{
-				exp2i(&tmp1, i);   // 2^i
-				ADD(Q, *Q, tmp1);   // Q <- Q + 2^i
-				//bi_assign(&tmp2, *R);
-				SUB(R, *R, B);   // R <- 2R + 1 - B
-			}
-		}
-
-	}
-	*/
 	// 변수 해제
 	bi_delete(&tmp1);
 	bi_delete(&tmp2);
@@ -875,21 +843,126 @@ void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B) //void Long_Division
 }
 
 /********** SQUARING ***********/
-void AA()
+void AA(bigint** C, bigint* A)
 {
+	bigint* A1 = NULL;
+	bigint* A0 = NULL;
+	bigint* C1 = NULL;
+	bigint* C0 = NULL;
+	bigint* T = NULL;
+
+	bi_new(&A1, 1); bi_new(&A0, 1); bi_new(&C1, 1); bi_new(&C0, 1); bi_new(&T, 1);
+	if (*C == NULL)
+	{
+		bi_new(C, 2);
+	}
+	bi_R_shift(&A1, A, (Word_Bit_Len >> 1));
+	bi_reduct(&A0, A, (Word_Bit_Len >> 1));
+	MUL(&C1, A1, A1);
+	MUL(&C0, A0, A0);
+	(*C)->a[1] = C1->a[0];
+	(*C)->a[0] = C0->a[0];
+	MUL(&T, A0, A1);
+	bi_L_shift(&T, T, (Word_Bit_Len >> 1) + 1);
+	ADD(C, *C, T);
+
+	bi_delete(&A1);
+	bi_delete(&A0);
+	bi_delete(&C1);
+	bi_delete(&C0);
+	bi_delete(&T);
 
 }
-void SQUC()
+void SQUC(bigint** C, bigint* A)
 {
+	bigint* C2 = NULL;
+	bigint* T1 = NULL;
+	bigint* T2 = NULL;
 
+	bi_new(&C2, 2 * A->wordlen); bi_new(&T1, 2 * A->wordlen); bi_new(&T2, 2 * A->wordlen);
+	if (*C == NULL)
+	{
+		bi_new(C, 2 * A->wordlen);
+	}
+
+	for (int i = 0; i < A->wordlen; i++)
+	{
+		MUL_AB(&T1, A, A, i, i);
+		ADD(C, *C, T1);
+		for (int j = i + 1; j < A->wordlen; j++)
+		{
+			MUL_AB(&T2, A, A, i, j);
+			ADD(&C2, C2, T2);
+
+		}
+	}
+	bi_L_shift(&C2, C2, 1);
+	ADD(C, *C, C2);
+	bi_delete(&C2);
+	bi_delete(&T1);
+	bi_delete(&T2);
 }
-void SQUC_Kara()
+void SQUC_K(bigint** C, bigint* A)
 {
+	int flag = 1;
+	int l = 0;
 
+	if (flag >= A->wordlen)
+	{
+		SQUC(C, A);
+		return;
+	}
+	l = (A->wordlen + 1) >> 1;
+	{
+		bigint* A1 = NULL;
+		bigint* A0 = NULL;
+		bigint* T1 = NULL;
+		bigint* T0 = NULL;
+		bigint* S = NULL;
+		bigint* R = NULL;
+		bi_new(&A1, l); bi_new(&A0, l); bi_new(&T1, 2 * l); bi_new(&T0, 2 * l); bi_new(&S, 2 * l); bi_new(&R, 4 * l);
+
+		bi_R_shift(&A1, A, l * Word_Bit_Len);
+		bi_reduct(&A0, A, l * Word_Bit_Len);
+		
+		SQUC_K(&T1, A1);
+		SQUC_K(&T0, A0);
+		for (int i = 0; i < 2 * l; i++)
+		{
+			R->a[i] = T0->a[i];
+		}
+		for (int i = 0; i < 2 * l; i++)
+		{
+			R->a[i + 2 * l] = T1->a[i];
+		}
+		MULC_K(&S, A1, A0);
+		bi_L_shift(&S, S, (l* Word_Bit_Len + 1));
+		ADDC(&R, R, S);
+		bi_new(C, 2 * A->wordlen);
+		bi_copy(C, R);
+
+		bi_delete(&A1);
+		bi_delete(&A0);
+		bi_delete(&T1);
+		bi_delete(&T0);
+		bi_delete(&S);
+		bi_delete(&R);
+	}
+	bi_refine(*C);
 }
-void SQU()
+void SQU(bigint** C, bigint* A)
 {
-
+	bigint* abs_A = NULL;
+	ABS(&abs_A, A);
+	if (bi_is_zero(A) || (bi_is_one(A)) || (A->sign = NEGATIVE && bi_is_one(abs_A)))
+	{
+		bi_assign(C, A);
+		(*C)->sign = NON_NEGATIVE;
+	}
+	else
+	{
+		SQUC(C, A);
+	}
 }
 
 /********** MOD_EXP ***********/

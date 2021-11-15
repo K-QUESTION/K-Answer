@@ -10,6 +10,8 @@ void test_(int test_op)
 	bigint* MUL_K = NULL;
 	bigint* DIV_Q = NULL;
 	bigint* DIV_R = NULL;
+	bigint* SQU_A = NULL;
+	bigint* SQU_B = NULL;
 
 	bi_new(&A, 2);
 	bi_new(&B, 1);
@@ -39,27 +41,34 @@ void test_(int test_op)
 	//bi_set_by_array(&B, NON_NEGATIVE, w2, 1);
 	bi_gen_rand(&B, NON_NEGATIVE, 1);
 	bi_show(B);
-	ADD(&ADD_C, A, B);
-	SUB(&SUB_C, A, B);
-	MUL(&MUL_C, A, B);
+	//ADD(&ADD_C, A, B);
+	//SUB(&SUB_C, A, B);
+	//MUL(&MUL_C, A, B);
 
-	MULC_K(&MUL_K, A, B);
+	//MULC_K(&MUL_K, A, B);
 
-	Long_DIV(&DIV_Q, &DIV_R, A, B);
-	//printf("%d\n",Compare(A, B));
+	//Long_DIV(&DIV_Q, &DIV_R, A, B);
+	SQU(&SQU_A, A);
+	SQUC_K(&SQU_B, B);
 
-	printf("ADD\n");
-	bi_show(ADD_C);
-	printf("SUB\n");
-	bi_show(SUB_C);
-	printf("MUL\n");
-	bi_show(MUL_C);
-	printf("Karatuba\n");
-	bi_show(MUL_K);
-	printf("DIV_Q\n");
-	bi_show(DIV_Q);
-	printf("DIV_R\n");
-	bi_show(DIV_R);
+	//printf("ADD\n");
+	//bi_show(ADD_C);
+	//printf("SUB\n");
+	//bi_show(SUB_C);
+	//printf("MUL\n");
+	//bi_show(MUL_C);
+	//printf("Karatuba\n");
+	//bi_show(MUL_K);
+	//printf("DIV_Q\n");
+	//bi_show(DIV_Q);
+	//printf("DIV_R\n");
+	//bi_show(DIV_R);
+
+	printf("SQU\n");
+	bi_show(SQU_A);
+	printf("SQU_K\n");
+	bi_show(SQU_B);
+
 
 	//bi_show(B);
 
