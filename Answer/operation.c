@@ -775,7 +775,56 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 
 void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
+	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);	// tmp1 = BW
+	bigint* tmp2 = NULL;	bi_new(&tmp2, 2);	// tmp2 = W
+	tmp2->a[1] = 1;	tmp2->a[0];
+	MULC_K(&tmp1, B, tmp2);
+	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT || Compare(A, tmp1) != BIGGER_SECOND_ARGUMENT || B->a[B->wordlen - 1] < 0x80)	// !(B <= A < BW) && B_m-1 >
+	{
+		printf("Enter a valid value.\n");
+		return;
+	}
+	
+	bi_resize(&tmp1, tmp1->wordlen, 1);	// tmp1 <- 1
+	tmp1->a[0] = 1;
 
+	if (A->wordlen == B->wordlen)
+	{
+		bi_new(Q, 1);
+		(*Q)->a[0] = A->a[A->wordlen - 1] / B->a[B->wordlen - 1];	// floor_func(A_m-1 / B_m-1)
+		bi_show(*Q);
+	}
+	if (A->wordlen == B->wordlen + 1)
+	{
+		if (A->a[A->wordlen - 1] == B->a[B->wordlen - 1])
+		{
+			bi_new(Q, 1);
+			SUBC(Q, tmp2, tmp1);	// Q <- W - 1
+			bi_show(*Q);
+		}
+		else
+		{
+			Long_DIV(Q, R, A, B);	// Q hat	// Q <- floor_func( (A_m * W + A_m-1) / B_m-1 )
+			bi_show(*Q);
+			bi_delete(R);
+		}
+	}
+	bi_new(R, 1);
+	MULC_K(R, B, *Q);	// BQ
+	bi_show(*R);
+	SUB(R, A, *R);	// R <- A - BQ
+	bi_show(*R);
+
+	while ((*R)->sign == NEGATIVE)
+	{
+		SUBC(Q, *Q, tmp1);	// Q <- Q - 1
+		bi_show(*Q);
+		ADD(R, *R, B);	// R <- R + B
+		bi_show(*R);
+	}
+
+	bi_delete(&tmp1);
+	bi_delete(&tmp2);
 }
 
 void exp2i(bigint** ret, int i)
