@@ -839,7 +839,7 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 	DIVCC(Q, R, tmp1, tmp2);
 	bi_show(*Q);
 	bi_show(*R);
-	printf("여기까지");
+	
 	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 0;	// tmp1 초기화
 	bi_R_shift(&tmp1, *R, k);	// R <- R * 2^(-k)
 	bi_copy(R, tmp1);
