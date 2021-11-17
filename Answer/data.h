@@ -12,8 +12,8 @@ void bi_resize(bigint** x, int prev_wordlen, int new_wordlen);
 /*********** SET ***********/
 void bi_set_one(bigint** x);  //ok
 void bi_set_zero(bigint** x);  //ok
-void bi_set_by_array(bigint** x, int sign, word* a, int worlen);  //array ÀúÀå ¼ø¼­ ÀÇ¹®
-void bi_set_by_string(bigint** x, int sign, char* str);  // ÀúÀå ¼ø¼­ ¼öÁ¤ÇÏ±â
+void bi_set_by_array(bigint** x, int sign, word* a, int worlen);  //array ì €ì¥ ìˆœì„œ ì˜ë¬¸
+void bi_set_by_string(bigint** x, int sign, char* str);  // ì €ì¥ ìˆœì„œ ìˆ˜ì •í•˜ê¸°
 void bi_assign(bigint** dst, bigint* src);  // ok
 void bi_gen_rand(bigint** x, int sign, int wordlen);  //ok
 void array_rand(word* dst, int wordlen);  //ok
@@ -27,14 +27,16 @@ void bi_flip_sign(bigint** x);  //ok
 int bi_is_one(bigint* x);  //ok
 int bi_is_zero(bigint* x);  //ok
 int bi_get_word_len(bigint* x);  //ok
-int bi_get_bit_len(bigint* x);  //¼öÁ¤
+int bi_get_bit_len(bigint* x);  //ìˆ˜ì •
 int bi_get_j_bit(bigint* x, int j);  //ok
 int bi_get_sign(bigint* x);  //ok
 
 /*********** SHOW ***********/
 void bi_show(bigint* x);
 void bi_show_hex(bigint* x);
-void bi_show_dec(bigint* x);  //unsinged int ¹üÀ§¸¦ ³Ñ¾î°¡¸é °è»êÀÌ Á¦´ë·Î ¾ÈµÊ...
+void bi_show_dec(bigint* x);  //unsinged int ë²”ìœ„ë¥¼ ë„˜ì–´ê°€ë©´ ê³„ì‚°ì´ ì œëŒ€ë¡œ ì•ˆë¨...
 void bi_show_bin(bigint* x);
+
+void str2hex(bigint** hex, unsigned char* str);
 
 #endif // !_DATA_H_
