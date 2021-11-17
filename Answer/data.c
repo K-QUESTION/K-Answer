@@ -611,7 +611,7 @@ void bi_show_bin(bigint* x)  //max len
     printf("\n");
 }
 
-void str2hex(bigint** hex, unsigned char* str)
+void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 size 오류 발생. 이것도 W 단위로 끊어서 봐야하나...?
 {
     if (*hex != NULL)
         return;
