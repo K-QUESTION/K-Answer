@@ -41,7 +41,7 @@ int CompareABS(bigint* A, bigint* B)
 		return BIGGER_FIRST_ARGUMENT;
 	else if (n < m)
 		return BIGGER_SECOND_ARGUMENT;
-	for (int i = n; i >= 0; i--)
+	for (int i = n - 1; i >= 0; i--)
 	{
 		if (A->a[i] == B->a[i])
 			continue;
@@ -117,10 +117,8 @@ void bi_L_shift(bigint** y, bigint* x, int nbits)   // bit shift
 		(*y)->a[i] = x->a[0] << rbits;
 
 	}
-	
 	if (nbits == 0)
-		bi_set_by_array(y, x->sign, x->a, x->wordlen); // 0 bit shift 입력이 들어온 경우
-
+		bi_assign(y, x); // 0 bit shift 입력이 들어온 경우
 	bi_refine(*y);
 	return;
 }
@@ -167,15 +165,15 @@ void bi_R_shift(bigint** y, bigint* x, int nbits)
 		for (i = 0; i < ((*y)->wordlen - 1); ++i)
 		{
 
-			(*y)->a[i] = ((*y)->a[i] >> nbits) | ((*y)->a[i + 1] << (Word_Bit_Len - nbits));
+			//(*y)->a[i] = ((*y)->a[i] >> nbits) | ((*y)->a[i + 1] << (Word_Bit_Len - nbits));
+			(*y)->a[i] = (x->a[i] >> nbits) | (x->a[i + 1] << (Word_Bit_Len - nbits));
 		}
-		(*y)->a[i] >>= nbits;
+		//(*y)->a[i] >>= nbits;
+		(*y)->a[i] = x->a[i] >> nbits;
 
 	}
-	
 	if (nbits == 0)
-		bi_set_by_array(y, x->sign, x->a, x->wordlen); // 0 bit shift 입력이 들어온 경우
-
+		bi_assign(y, x); // 0 bit shift 입력이 들어온 경우
 	bi_refine(*y);
 	return;
 }
@@ -321,6 +319,8 @@ void ADDC(bigint** C, bigint* A, bigint* B) // where WordLen(A) �� WordLen(B
 		bi_new(C, A->wordlen + 1);
 		bi_set_zero(C);
 	}
+	if ((*C)->wordlen < A->wordlen)
+		bi_resize(C, (*C)->wordlen, A->wordlen + 1);
 	int carry = 0;
 	for (int j = 0; j < A->wordlen; j++)
 	{
@@ -432,31 +432,30 @@ void SUB_AB(bigint** C, bigint* A, bigint* B)
  *
  * @remark
  */
-void SUB_AbB(bigint** C, bigint* A, bigint* B, int b, int idx) // int b -> {0, 1}, idx -> A, B�� a  �ε���
+int SUB_AbB(bigint** C, bigint* A, bigint* B, int b, int idx) // int b -> {0, 1}, idx -> A, B�� a  �ε���
 {
+	/*
 	if ((*C) == NULL)
 	{
 		bi_new(C, idx + 1);
 	}
 
 	bi_resize(C, idx + 1, idx + 2);
-
+	*/
+	int borrow = 0;
 	(*C)->a[idx] = ((A->a[idx] - b)) % (1 << Word_Bit_Len);
 
 	if (A->a[idx] < b)
 	{
-		(*C)->a[idx + 1] = 1;
+		borrow = 1;
 	}
-	else
-		(*C)->a[idx + 1] = 0;
-
 
 	if ((*C)->a[idx] < B->a[idx])
 	{
-		(*C)->a[idx + 1] += 1;
+		borrow += 1;
 	}
 	(*C)->a[idx] = (((*C)->a[idx] - B->a[idx])) % (1 << Word_Bit_Len);
-
+	return borrow;
 }
 
 /**
@@ -474,11 +473,18 @@ void SUBC(bigint** C, bigint* A, bigint* B) // where WordLen(A) �� WordLen(B
 	bi_assign(&tmp_B, B);
 	bi_resize(&tmp_B, tmp_B->wordlen, A->wordlen);
 
+	if ((*C) == NULL)
+	{
+		bi_new(C, A->wordlen);
+		bi_set_zero(C);
+	}
+	if ((*C)->wordlen < A->wordlen)
+		bi_resize(C, (*C)->wordlen, A->wordlen);
 	int borrow = 0;
 	for (int j = 0; j < A->wordlen; j++)
 	{
-		SUB_AbB(C, A, tmp_B, borrow, j);
-		borrow = (*C)->a[j + 1];
+		borrow = SUB_AbB(C, A, tmp_B, borrow, j);
+		//borrow = (*C)->a[j + 1];
 	}
 
 	bi_refine(*C);
@@ -504,11 +510,11 @@ void SUB(bigint** C, bigint* A, bigint* B)
 	{
 		bi_copy(C, A);
 	}
-	else if (Compare(A, B) == 0)
+	else if (Compare(A, B) == EQUAL_ARGUMENT)
 		bi_set_zero(C);
 	else if (A->sign == NON_NEGATIVE && B->sign == NON_NEGATIVE)
 	{
-		if (CompareABS(A, B) == 1)
+		if (CompareABS(A, B) == BIGGER_FIRST_ARGUMENT)
 		{
 			SUBC(C, A, B);
 			(*C)->sign = NON_NEGATIVE;
@@ -546,22 +552,23 @@ void SUB(bigint** C, bigint* A, bigint* B)
 	}
 	else if (A->sign == NON_NEGATIVE && B->sign == NEGATIVE)
 	{
-		bigint* absA = NULL;
 		bigint* absB = NULL;
-		ABS(&absA, A);
 		ABS(&absB, B);
-		SUBC(C, absA, absB);
-		(*C)->sign = NEGATIVE;
-		bi_delete(&absA);
-		bi_delete(&absB);
-		ADD(C, A, B);
+		if (A->wordlen >= B->wordlen)
+			ADD(C, A, absB);
+		else
+			ADD(C, absB, A);
 		(*C)->sign = NON_NEGATIVE;
+		bi_delete(&absB);
 	}
 	else
 	{
 		bigint* absA = NULL;
 		ABS(&absA, A);
-		ADD(C, absA, B);
+		if (A->wordlen >= B->wordlen)
+			ADD(C, B, absA);
+		else
+			ADD(C, absA, B);
 		(*C)->sign = NEGATIVE;
 		bi_delete(&absA);
 
@@ -701,6 +708,7 @@ void MUL(bigint** C, bigint* A, bigint* B)
 	{
 		int sign = A->sign ^ B->sign;
 		MULC(C, A, B);
+		//MULC_K(C, A, B);
 		(*C)->sign = sign;
 	}
 	bi_refine(*C);
@@ -740,11 +748,17 @@ void MULC_K(bigint** C, bigint* A, bigint* B) // Fast Multiplication  //return R
 		MULC_K(&T0, A0, B0);
 		for (int i = 0; i < 2 * l; i++)
 		{
-			R->a[i] = T0->a[i];
+			if (i < T0->wordlen)
+				R->a[i] = T0->a[i];
+			else
+				R->a[i] = 0;
 		}
 		for (int i = 0; i < 2 * l; i++)
 		{
-			R->a[i + 2 * l] = T1->a[i];
+			if (i < T1->wordlen)
+				R->a[i + 2 * l] = T1->a[i];
+			else
+				R->a[i + 2 * l] = 0;
 		}
 		SUB(&S1, A0, A1);
 		SUB(&S0, B1, B0);
@@ -754,6 +768,7 @@ void MULC_K(bigint** C, bigint* A, bigint* B) // Fast Multiplication  //return R
 		bi_L_shift(&S, S, l * Word_Bit_Len);
 		ADD(&R, R, S);
 		bi_new(C, A->wordlen + B->wordlen);
+		array_init((*C)->a, (*C)->wordlen);
 		bi_copy(C, R);
 
 		bi_delete(&A1);
@@ -784,7 +799,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	}
 
 	bigint* r = NULL;	bi_new(&r, 1);	r->a[0] = 0;
-	bigint* W = NULL;	bi_new(&W, 2);	W->a[1] = 1;	W->a[0] = 0;
+	//bigint* W = NULL;	bi_new(&W, 2);	W->a[1] = 1;	W->a[0] = 0;
 	bigint* Ai = NULL;	bi_new(&Ai, 1);
 	bigint* rW = NULL;
 	bigint* rW_Ai = NULL;
@@ -795,7 +810,8 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	for (int i = A->wordlen - 1; i >= 0; i--)
 	{
 		Ai->a[0] = A->a[i];
-		MULC_K(&rW, r, W);
+		// MULC_K(&rW, r, W);
+		bi_L_shift(&rW, r, Word_Bit_Len);
 		ADDC(&rW_Ai, rW, Ai);
 		DIVC(&Qi, R, rW_Ai, B);
 		(*Q)->a[i] = Qi->a[0];
@@ -810,7 +826,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	bi_refine(*Q);
 
 	bi_delete(&r);
-	bi_delete(&W);
+	//bi_delete(&W);
 	bi_delete(&Ai);
 }
 
@@ -818,9 +834,12 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
 	// Input condition
 	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);	// tmp1 = BW
-	bigint* tmp2 = NULL;	bi_new(&tmp2, 2);	// tmp2 = W
-	tmp2->a[1] = 1;	tmp2->a[0];
-	MULC_K(&tmp1, B, tmp2);
+	bigint* tmp2 = NULL; //	bi_new(&tmp2, 2);   //아래 resize 수정
+	bi_new(Q, 1);
+	bi_new(R, 1);
+	//tmp2->a[1] = 1;	tmp2->a[0] = 0;
+	//MULC_K(&tmp1, B, tmp2);
+	bi_L_shift(&tmp1, B, Word_Bit_Len);
 	if (A->sign == NEGATIVE || Compare(A, tmp1) != BIGGER_SECOND_ARGUMENT)	// !(0 <= A < BW)
 	{
 		printf("DIVC FAILURE : Enter a valid value.\n");
@@ -839,21 +858,29 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 
 
 	int Bm_1 = bi_get_bit_len(B) - (B->wordlen - 1) * Word_Bit_Len;
-	int k = Word_Bit_Len - 1 - Bm_1;	// 2^(W-1) <= 2^k * B_m-1 < 2^W
+	int k = Word_Bit_Len - Bm_1;	// 2^(W-1) <= 2^k * B_m-1 < 2^W
 
 	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 1;	// tmp1 초기화
-	bi_resize(&tmp2, tmp2->wordlen, 1);	tmp2->a[0] = 1; // tmp2 초기화
+	// bi_resize(&tmp2, tmp2->wordlen, 1);	tmp2->a[0] = 1; // tmp2 초기화
+	bi_new(&tmp2, 1);	tmp2->a[0] = 1;
 
 	bi_L_shift(&tmp1, A, k);	// A <- A * 2^k
 	bi_L_shift(&tmp2, B, k);	// B <- B * 2^k
 
 	DIVCC(Q, R, tmp1, tmp2);
 
-	bi_delete(&tmp1);
-	bi_assign(&tmp1, *R);
-	bi_resize(R, (*R)->wordlen, 1);
-	(*R)->a[0] = tmp1->a[0] >> k;	// R <- R * 2^(-k)
-
+	//bi_delete(&tmp1);
+	//bi_assign(&tmp1, *R);
+	//bi_resize(R, (*R)->wordlen, 1);
+	//(*R)->a[0] = tmp1->a[0] >> k;	// R <- R * 2^(-k)
+	//bi_delete(R);
+	//bi_assign(R, tmp1);
+	bi_set_one(&tmp1);
+	bi_resize(&tmp1, tmp1->wordlen, (*R)->wordlen);
+	bi_R_shift(&tmp1, *R, k);
+	bi_delete(R);
+	bi_assign(R, tmp1);
+	
 	bi_delete(&tmp1);
 	bi_delete(&tmp2);
 }
@@ -862,9 +889,11 @@ void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
 	// Input condition
 	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);	// tmp1 = BW
-	bigint* tmp2 = NULL;	bi_new(&tmp2, 2);	// tmp2 = W
-	tmp2->a[1] = 1;	tmp2->a[0];
-	MULC_K(&tmp1, B, tmp2);
+	bigint* tmp2 = NULL;	bi_new(&tmp2, 2);   //아래 resize 수정
+	
+	//tmp2->a[1] = 1;	tmp2->a[0] = 0;
+	//MULC_K(&tmp1, B, tmp2);
+	bi_L_shift(&tmp1, B, Word_Bit_Len);
 	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT || Compare(A, tmp1) != BIGGER_SECOND_ARGUMENT || B->a[B->wordlen - 1] < 0x80)	// !(B <= A < BW) && B_m-1 >= 2^w-1
 	{
 		printf("DIVCC FAILURE : Enter a valid value.\n");
@@ -889,8 +918,14 @@ void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B)
 		}
 		else
 		{
-			Long_DIV(Q, R, A, B);	// Q hat	// Q <- floor_func( (A_m * W + A_m-1) / B_m-1 )
-			bi_delete(R);
+			bigint* A_ = NULL;
+			bigint* B_ = NULL;
+			bi_new(&A_, 2); A_->a[1] = A->a[B->wordlen]; A_->a[0] = A->a[B->wordlen - 1];
+			bi_new(&B_, 1); B_->a[0] = B->a[B->wordlen - 1];
+			Long_DIV(Q, A_, B_);	// Q hat	// Q <- floor_func( (A_m * W + A_m-1) / B_m-1 )
+			
+			bi_delete(&A_);
+			bi_delete(&B_);
 		}
 	}
 	bi_new(R, 1);
@@ -909,13 +944,16 @@ void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B)
 
 void exp2i(bigint** ret, int i)
 {
-	bi_set_one(ret);
-	bi_L_shift(ret, *ret, i);
+	bigint* tmp = NULL;
+	bi_set_one(&tmp);
+	bi_L_shift(ret, tmp, i);
+	bi_delete(&tmp);
 	return;
 }
 
-void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B) //void Long_Division, 2 word ver
+void Long_DIV(bigint** Q, bigint* A, bigint* B) //void Long_Division, 2 word ver
 {
+	bigint* R = NULL;
 	if (!(A->a[1] < B->a[0]))
 	{
 		printf("Long_DIV FAILURE : Enter a valid value.\n");
@@ -924,8 +962,9 @@ void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B) //void Long_Division
 
 	bi_new(Q, 2);   // Q = 0
 	(*Q)->a[0] = 0;   (*Q)->a[1] = 0;
-	bi_new(R, 1);   // R = A[1]
-	(*R)->a[0] = A->a[1];
+	bi_new(&R, 2);   // R = A[1]
+	
+	R->a[0] = A->a[1];
 
 	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);
 	bigint* tmp2 = NULL;    bi_new(&tmp2, 1);
@@ -936,39 +975,39 @@ void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B) //void Long_Division
 
 	for (int i = Word_Bit_Len - 1; i >= 0; --i)
 	{
-		if (Compare(*R, W) == BIGGER_FIRST_ARGUMENT || Compare(*R, W) == EQUAL_ARGUMENT) 
+		if (Compare(R, W) == BIGGER_FIRST_ARGUMENT || Compare(R, W) == EQUAL_ARGUMENT) 
 		{
 			exp2i(&tmp1, i);   // 2^i
 			ADD(Q, *Q, tmp1);   // Q <- Q + 2^i
 
-			bi_L_shift(&tmp2, *R, 1);   // 2R  // tmp 안 쓰면 짤림
-			SUB(R, tmp2, B);   // 2R - B
+			bi_L_shift(&tmp2, R, 1);   // 2R  // tmp 안 쓰면 짤림
+			SUB(&R, tmp2, B);   // 2R - B
 			bi_resize(&tmp2, tmp2->wordlen, 1);
 			tmp2->a[0] = (word)bi_get_j_bit(A, i);   // a_j
-			ADD(R, *R, tmp2);   // R <- 2R + 1 - B
+			ADD(&R, R, tmp2);   // R <- 2R + 1 - B
 		}
 		else
 		{
 			bi_set_zero(&tmp1);
-			bi_L_shift(&tmp1, *R, 1);   // 2R
+			bi_L_shift(&tmp1, R, 1);   // 2R
 			tmp2->a[0] = (word)bi_get_j_bit(A, i);   // a_j
-			ADD_ABc(R, tmp1, tmp2, 0, 0);   // R <- 2R + 1
-			if (Compare(*R, B) == BIGGER_FIRST_ARGUMENT || Compare(*R, B) == EQUAL_ARGUMENT) 
+			ADD_ABc(&R, tmp1, tmp2, 0, 0);   // R <- 2R + 1
+			if (Compare(R, B) == BIGGER_FIRST_ARGUMENT || Compare(R, B) == EQUAL_ARGUMENT) 
 			{
 				exp2i(&tmp1, i);   // 2^i
 				ADD(Q, *Q, tmp1);   // Q <- Q + 2^i
-				bi_assign(&tmp2, *R);
-				SUB(R, tmp2, B);   // R <- 2R - B
+				bi_assign(&tmp2, R);
+				SUB(&R, tmp2, B);   // R <- R - B
 			}
 		}
 	}
 
 	// 변수 해제
+	bi_delete(&R);
 	bi_delete(&tmp1);
 	bi_delete(&tmp2);
 	bi_delete(&W);
 }
-
 
 /********** SQUARING ***********/
 void AA(bigint** C, bigint* A)
