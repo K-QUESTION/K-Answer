@@ -797,7 +797,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 		Ai->a[0] = A->a[i];
 		MULC_K(&rW, r, W);
 		ADDC(&rW_Ai, rW, Ai);
-		DIVC(&Qi, R, rW_Ai, B); // 여기만 문제가 있는 것 같은데, 뭐가 문제일까?
+		DIVC(&Qi, R, rW_Ai, B);
 		(*Q)->a[i] = Qi->a[0];
 		bi_assign(&r, *R);
 
@@ -837,6 +837,7 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 		return;
 	}
 
+
 	int Bm_1 = bi_get_bit_len(B) - (B->wordlen - 1) * Word_Bit_Len;
 	int k = Word_Bit_Len - 1 - Bm_1;	// 2^(W-1) <= 2^k * B_m-1 < 2^W
 
@@ -848,9 +849,10 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 
 	DIVCC(Q, R, tmp1, tmp2);
 
-	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 0;	// tmp1 초기화
-	bi_R_shift(&tmp1, *R, k);	// R <- R * 2^(-k)
-	bi_copy(R, tmp1);
+	bi_delete(&tmp1);
+	bi_assign(&tmp1, *R);
+	bi_resize(R, (*R)->wordlen, 1);
+	(*R)->a[0] = tmp1->a[0] >> k;	// R <- R * 2^(-k)
 
 	bi_delete(&tmp1);
 	bi_delete(&tmp2);
