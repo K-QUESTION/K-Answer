@@ -616,7 +616,7 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     if (*hex != NULL)
         return;
 
-    int size = ((strlen(str) + 1) / 3); // str byte 수 : n = strlen(str)+1 / 3, 할당할 크기 : byte 단위
+    int size = (strlen(str) + 1) / (Word_Bit_Len / 4 + 1); // str byte 수 : n = strlen(str)+1 / 3, 할당할 크기 : byte 단위
     word* tmp = malloc(size);   // str을 배열로 저장할 포인터 임시 변수
     int num;    // str을 띄어쓰기를 기준으로 (즉, 바이트씩) 저장할 임시 변수
     unsigned char* end; // 띄어쓰기(NULL) 끝 주소를 저장할 포인터
@@ -624,17 +624,13 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     /******************************************************************** 역순으로 저장됨
     num = strtol(str, &end, 16);
     tmp[size - 1] = num;
-
     for (int k = size - 2; k >0; k--)
     {
         num = strtol(end, &end, 16);
         tmp[k] = num;
     }
-
     num = strtol(end, NULL, 16);
     tmp[0] = num;
-
-
     for (int k = 0; k < size; k++)
     {
         printf("%02x", tmp[k]);
@@ -645,14 +641,11 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     num = strtol(str, &end, 16);  // 시작주소 s부터 띄어쓰기까지 16진수로 저장하고 end 주소를 반환
     tmp[0] = num;
 
-    for (int k = 1; k < size - 1; k++)
+    for (int k = 1; k < size; k++)
     {
         num = strtol(end, &end, 16);
         tmp[k] = num;
     }
-
-    num = strtol(end, NULL, 16);
-    tmp[size - 1] = num;
 
     bi_new(hex, 1);
     bi_set_by_array(hex, NON_NEGATIVE, tmp, size);
