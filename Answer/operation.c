@@ -775,33 +775,35 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 		return;
 	}
 
-	bigint* ret = NULL;	// R'
-	bi_set_zero(&ret);
-
-	bigint* tmp1 = NULL;	bi_new(&tmp1, 2);	// tmp1 = W
-	tmp1->a[1] = 1;	tmp1->a[0];
-	bigint* tmp2 = NULL;	bi_new(&tmp2, 1);	// tmp2 = Ai
-	bigint* tmp3 = NULL;	// Qi
+	bigint* r = NULL;	bi_new(&r, 1);	r->a[0] = 0;
+	bigint* W = NULL;	bi_new(&W, 2);	W->a[1] = 1;	W->a[0] = 0;
+	bigint* Ai = NULL;	bi_new(&Ai, 1);
+	bigint* rW = NULL;
+	bigint* rW_Ai = NULL;
+	bigint* Qi = NULL;
 
 	bi_new(Q, A->wordlen);
 
-	for (int i = A->wordlen - 1; i >= 0; --i)
+	for (int i = A->wordlen - 1; i >= 0; i--)
 	{
-		MULC_K(&ret, ret, tmp1);	// RW
-		tmp2->a[0] = A->a[i];	// Ai
-		ADD(&ret, ret, tmp2);	// R <- RW + Ai
-		DIVC(&tmp3, R, ret, B);	// (Qi, R) <- DIVC(R, B)
-		(*Q)->a[i] = tmp3->a[0];
-		bi_assign(&ret, *R);
-		bi_delete(R);
-		bi_delete(&tmp3);
-	}
-	bi_assign(R, ret);
-	bi_refine(*R);
+		Ai->a[0] = A->a[i];
+		MULC_K(&rW, r, W);
+		ADDC(&rW_Ai, rW, Ai);
+		DIVC(&Qi, R, rW_Ai, B); // 여기만 문제가 있는 것 같은데, 뭐가 문제일까?
+		(*Q)->a[i] = Qi->a[0];
+		bi_assign(&r, *R);
 
-	bi_delete(&ret);
-	bi_delete(&tmp1);
-	bi_delete(&tmp2);
+		bi_delete(&rW);
+		bi_delete(&rW_Ai);
+		bi_delete(&Qi);
+		bi_delete(R);
+	}
+	bi_assign(R, r);
+	bi_refine(*Q);
+
+	bi_delete(&r);
+	bi_delete(&W);
+	bi_delete(&Ai);
 }
 
 void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
