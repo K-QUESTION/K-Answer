@@ -822,9 +822,9 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 	// Process
 	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT)	// A < B
 	{
-		bi_new(*Q, 1);
+		bi_new(Q, 1);
 		(*Q)->a[0] = 0;			// Q = 0
-		bi_new(*R, A->wordlen);
+		bi_new(R, A->wordlen);
 		bi_assign(R, A);		// R = A
 		return;
 	}
@@ -839,9 +839,7 @@ void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 	bi_L_shift(&tmp2, B, k);	// B <- B * 2^k
 
 	DIVCC(Q, R, tmp1, tmp2);
-	bi_show(*Q);
-	bi_show(*R);
-	
+
 	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 0;	// tmp1 초기화
 	bi_R_shift(&tmp1, *R, k);	// R <- R * 2^(-k)
 	bi_copy(R, tmp1);
