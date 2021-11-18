@@ -765,17 +765,125 @@ void MULC_K(bigint** C, bigint* A, bigint* B) // Fast Multiplication  //return R
 /********** DIVISION ***********/
 void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
+	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT)
+	{
+		bi_new(*Q, 1);
+		(*Q)->a[0] = 0;			// Q = 0
+		bi_new(*R, A->wordlen);
+		bi_assign(R, A);		// R = A
+	}
 
+	bi_set_zero(R);
+	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);
+	bigint* tmp2 = NULL;
+	bigint* tmp3 = NULL;	bi_new(&tmp3, 2);	// tmp3 = W
+	tmp3->a[1] = 1;	tmp3->a[0];
+
+	for (int i = A->wordlen - 1; i >= 0; --i)
+	{
+		tmp1->a[0] = A->a[i];
+		MULC_K(R, *R, tmp3);	// RW
+		ADD(R, *R, tmp1);	// R <- RW + Ai
+		DIVC(&tmp2, R, *R, B);
+		(*Q)->a[i] = tmp2->a[0];
+		bi_delete(&tmp2);	// tmp2 초기화
+	}
+
+	bi_delete(&tmp1);
+	bi_delete(&tmp3);
 }
 
 void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
+	// Input condition
+	bigint* tmp1 = NULL;	bi_new(&tmp1, 1);	// tmp1 = BW
+	bigint* tmp2 = NULL;	bi_new(&tmp2, 2);	// tmp2 = W
+	tmp2->a[1] = 1;	tmp2->a[0];
+	MULC_K(&tmp1, B, tmp2);
+	if (A->sign == NEGATIVE || Compare(A, tmp1) != BIGGER_SECOND_ARGUMENT)	// !(0 <= A < BW)
+	{
+		printf("Enter a valid value.\n");
+		return;
+	}
 
+	// Process
+	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT)	// A < B
+	{
+		bi_new(*Q, 1);
+		(*Q)->a[0] = 0;			// Q = 0
+		bi_new(*R, A->wordlen);
+		bi_assign(R, A);		// R = A
+	}
+
+	int k = Word_Bit_Len - 1 - (bi_get_bit_len(B) - B->wordlen *Word_Bit_Len);	// 2^(W-1) <= 2^k * B_m-1 < 2^W
+
+	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 0;	// tmp1 초기화
+	bi_resize(&tmp2, tmp2->wordlen, 1);	tmp2->a[0] = 0; // tmp2 초기화
+
+	bi_L_shift(&tmp1, A, k);	// A <- A * 2^k
+	bi_L_shift(&tmp2, B, k);	// B <- B * 2^k
+
+	DIVCC(Q, R, tmp1, tmp2);	// 조건 때문에 계산이 안 되는 건 말이 안 되는 것 같은데 뭐가 문제람
+	bi_resize(&tmp1, tmp1->wordlen, 1);	tmp1->a[0] = 0;	// tmp1 초기화
+	bi_R_shift(&tmp1, *R, k);	// R <- R * 2^(-k)
+	bi_copy(R, tmp1);
+
+	bi_delete(&tmp1);
+	bi_delete(&tmp2);
 }
 
 void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
+	bigint* tmp1 = NULL;   bi_new(&tmp1, 1);   // tmp1 = BW
+	bigint* tmp2 = NULL;   bi_new(&tmp2, 2);   // tmp2 = W
+	tmp2->a[1] = 1;   tmp2->a[0];
+	MULC_K(&tmp1, B, tmp2);
+	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT || Compare(A, tmp1) != BIGGER_SECOND_ARGUMENT || B->a[B->wordlen - 1] < 0x80)   // !(B <= A < BW) && B_m-1 >
+	{
+		printf("Enter a valid value.\n");
+		return;
+	}
 
+	bi_resize(&tmp1, tmp1->wordlen, 1);   // tmp1 <- 1
+	tmp1->a[0] = 1;
+
+	if (A->wordlen == B->wordlen)
+	{
+		bi_new(Q, 1);
+		(*Q)->a[0] = A->a[A->wordlen - 1] / B->a[B->wordlen - 1];   // floor_func(A_m-1 / B_m-1)
+		bi_show(*Q);
+	}
+	if (A->wordlen == B->wordlen + 1)
+	{
+		if (A->a[A->wordlen - 1] == B->a[B->wordlen - 1])
+		{
+			bi_new(Q, 1);
+			SUBC(Q, tmp2, tmp1);   // Q <- W - 1
+			bi_show(*Q);
+		}
+		else
+		{
+			Long_DIV(Q, R, A, B);   // Q hat   // Q <- floor_func( (A_m * W + A_m-1) / B_m-1 )
+			bi_show(*Q);
+			bi_delete(R);
+		}
+	}
+	bi_new(R, 1);
+	MULC_K(R, B, *Q);   // BQ
+	bi_show(*R);
+	SUB(R, A, *R);   // R <- A - BQ
+	bi_show(*R);
+
+	while ((*R)->sign == NEGATIVE)
+	{
+		SUBC(Q, *Q, tmp1);   // Q <- Q - 1
+		bi_show(*Q);
+		ADD(R, *R, B);   // R <- R + B
+		bi_show(*R);
+	}
+
+	bi_delete(&tmp1);
+	bi_delete(&tmp2);
 }
 
 void exp2i(bigint** ret, int i)
@@ -879,7 +987,7 @@ void SQUC(bigint** C, bigint* A)
 	bigint* T1 = NULL;
 	bigint* T2 = NULL;
 
-	bi_new(&C2, 2 * A->wordlen); bi_new(&T1, 2 * A->wordlen); bi_new(&T2, 2 * A->wordlen);
+	bi_new(&C2, 2 * A->wordlen); bi_new(&T1, 2 * A->wordlen); bi_new(&T2, 2 * A->wordlen); 
 	if (*C == NULL)
 	{
 		bi_new(C, 2 * A->wordlen);

@@ -19,7 +19,7 @@ void test_(int test_op)
 	//word w2[2] = { 0x7B, 0xE8 };
 	word w1[2] = { 0xE2, 0x82 };
 	word w2[1] = { 0x88 };
-	//	char* s = "0x1233";
+	char* s = "12334";
 		/*
 		switch (test_op)
 		{
@@ -29,20 +29,22 @@ void test_(int test_op)
 		default:
 			break;
 		}*/
-	bi_gen_rand(&A, NON_NEGATIVE, 2);
+	//bi_gen_rand(&A, NON_NEGATIVE, 2);
 	//bi_set_by_array(&A, NON_NEGATIVE, w1, 2);
 	//bi_set_one(&A);
 	//bi_flip_sign(&A);
+	bi_set_by_string(&A, 0, s);
 	bi_show(A);
+
 	//getchar();
 	Sleep(1000);
-
+	
 	//bi_set_one(&B);
 	//bi_set_by_array(&B, NON_NEGATIVE, w2, 1);
 	bi_gen_rand(&B, NON_NEGATIVE, 1);
 	bi_show(B);
-	//ADD(&ADD_C, A, B);
-	//SUB(&SUB_C, A, B);
+	ADD(&ADD_C, A, B);
+	SUB(&SUB_C, A, B);
 	//MUL(&MUL_C, A, B);
 
 	//MULC_K(&MUL_K, A, B);
@@ -71,12 +73,12 @@ void test_(int test_op)
 
 
 	//bi_show(B);
-
+	*/
 	bi_delete(&A);
-	bi_delete(&B);
-	bi_delete(&ADD_C);
-	bi_delete(&SUB_C);
-	bi_delete(&MUL_C);
-	bi_delete(&MUL_K);
+	//bi_delete(&B);
+	//bi_delete(&ADD_C);
+	//bi_delete(&SUB_C);
+	//bi_delete(&MUL_C);
+	//bi_delete(&MUL_K);
 
 }

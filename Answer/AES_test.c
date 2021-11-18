@@ -1,5 +1,5 @@
-#include "aes.h"
-
+#include "AES.h"
+/*
 int main()
 {
 	// AES TEST Para//
@@ -14,3 +14,4 @@ int main()
 
 	return 0;
 }
+*/

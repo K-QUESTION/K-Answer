@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "memory.h" //"tyep.h"로 추후 수정
+#include "type.h" //"tyep.h"로 추후 수정
 
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //

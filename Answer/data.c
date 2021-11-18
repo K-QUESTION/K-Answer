@@ -187,6 +187,7 @@ void bi_set_by_array(bigint** x, int sign, word* a, int wordlen)
 
 }
 
+
 /**
  * @brief
  *
@@ -200,18 +201,37 @@ void bi_set_by_string(bigint** x, int sign, char* str)  //, int base)  //string 
 {
     if (((sign != NEGATIVE) && (sign != NON_NEGATIVE)) || (str == NULL) || str < 0)//||(base != 2 && base != 10 && base != 16 ))
         return;
-    int array_size = ((int)strlen(str)) / (2 * (Word_Bit_Len / 8));
+    if (*x != NULL)
+        bi_delete(x);
+    int str_len = 0;
+    str_len = (int)strlen(str) % 2 ? (int)strlen(str) + 1 : (int)strlen(str);
+    int array_size = 0;
     word tmp[3];
 
+
     //bi_new(x, array_size);
-
-    for (int i = 1; i < array_size; i++)
+    switch (Word_Bit_Len)
     {
-        memcpy(tmp, str + (i * 2), 2);
-        tmp[2] = 0;
-        (*x)->a[i] = (word)strtoul(tmp, NULL, 16);// strtoul -> str => usigned long
-    }
+    case 8:
+        array_size = str_len / 2;
+        bi_new(x, array_size);
+        strtoword((*x)->a, str, array_size);
+        break;
+    case 32:
+        array_size = str_len / 4;
+        bi_new(x, array_size);
+        strtoword((*x)->a, str, array_size);
+        break;
+    case 64:
+        array_size = str_len / 8;
+        bi_new(x, array_size);
+        strtoword((*x)->a, str, array_size);
+        break;
 
+    default:
+        break;
+    }
+   
     (*x)->sign = sign;
     (*x)->wordlen = array_size;
 }
@@ -465,7 +485,15 @@ int bi_get_word_len(bigint* x)
  */
 int bi_get_bit_len(bigint* x)
 {
-    return x->wordlen * Word_Bit_Len;
+    word tmp = 1;
+    int i = 0;
+    for (int i = Word_Bit_Len - 1; i >= 0; i--)
+    {
+        tmp = tmp << i;
+        if (x->a[x->wordlen - 1] & tmp == 1)
+            break;
+    }
+    return i + (x->wordlen - 1) * Word_Bit_Len;
 }
 
 /**
