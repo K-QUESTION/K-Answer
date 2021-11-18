@@ -117,6 +117,10 @@ void bi_L_shift(bigint** y, bigint* x, int nbits)   // bit shift
 		(*y)->a[i] = x->a[0] << rbits;
 
 	}
+	
+	if (nbits == 0)
+		bi_set_by_array(y, x->sign, x->a, x->wordlen); // 0 bit shift 입력이 들어온 경우
+
 	bi_refine(*y);
 	return;
 }
@@ -168,6 +172,10 @@ void bi_R_shift(bigint** y, bigint* x, int nbits)
 		(*y)->a[i] >>= nbits;
 
 	}
+	
+	if (nbits == 0)
+		bi_set_by_array(y, x->sign, x->a, x->wordlen); // 0 bit shift 입력이 들어온 경우
+
 	bi_refine(*y);
 	return;
 }
