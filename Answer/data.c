@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file data.c
  * @author Ryu Jieun (ofryuji@gmail.com )
  * @author Yoon Hyejin (hyejin91655@gmail.com)
@@ -138,8 +138,9 @@ void bi_resize(bigint** x, int prev_wordlen, int new_wordlen)
  */
 void bi_set_one(bigint** x)
 {
-    if (*x == NULL)
-        bi_new(x, 1);
+    if (*x != NULL)
+        bi_delete(x);
+    bi_new(x, 1);
     (*x)->sign = NON_NEGATIVE;
     (*x)->a[0] = 0x01;
     (*x)->wordlen = 1;
@@ -200,11 +201,12 @@ void bi_set_by_string(bigint** x, int sign, char* str)  //, int base)  //string 
 {
     if (((sign != NEGATIVE) && (sign != NON_NEGATIVE)) || (str == NULL) || str < 0)//||(base != 2 && base != 10 && base != 16 ))
         return;
-    int array_size = ((int)strlen(str)) / (2 * (Word_Bit_Len / 8));
-    word tmp[3];
+    int a = (int)strlen(str);
+    int str_len = (int)strlen(str) % 2 == 1 ? (int)strlen(str) - 1 : (int)strlen(str);
+    int array_size = 0;
 
-    //bi_new(x, array_size);
 
+    /*
     for (int i = 1; i < array_size; i++)
     {
         memcpy(tmp, str + (i * 2), 2);
@@ -212,6 +214,29 @@ void bi_set_by_string(bigint** x, int sign, char* str)  //, int base)  //string 
         (*x)->a[i] = (word)strtoul(tmp, NULL, 16);// strtoul -> str => usigned long
     }
 
+
+
+    */
+    switch (Word_Bit_Len)
+    {
+    case 8:
+        array_size = str_len / 2;
+        bi_new(x, array_size);
+        str2word((*x)->a, str, array_size);
+        break;
+    case 32:
+        array_size = str_len / 4;
+        bi_new(x, array_size);
+        str2word((*x)->a, str, array_size);
+        break;
+    case 64:
+        array_size = str_len / 8;
+        bi_new(x, array_size);
+        str2word((*x)->a, str, array_size);
+        break;
+    default:
+        break;
+    }
     (*x)->sign = sign;
     (*x)->wordlen = array_size;
 }
@@ -227,9 +252,9 @@ void bi_set_by_string(bigint** x, int sign, char* str)  //, int base)  //string 
 void bi_assign(bigint** dst, bigint* src)
 {
     /**/
-    if (*dst == NULL)
-        bi_new(dst, src->wordlen);
-    //bi_delete(dst);
+    if (*dst != NULL)
+        bi_delete(dst);
+    bi_new(dst, src->wordlen);
 
     (*dst)->sign = src->sign;
     array_copy((*dst)->a, src->a, src->wordlen);
@@ -273,32 +298,34 @@ void array_rand(word* dst, int wordlen)
         p++;
         cnt--;
     }*/
-    if (Word_Bit_Len == 8)
+    switch (Word_Bit_Len)
     {
+    case 8:
         while (cnt > 0)
         {
             *p = rand() & 0xff;
             p++;
             cnt--;
         }
-    }
-    if (Word_Bit_Len == 32)
-    {
+        break;
+    case 32:
         while (cnt > 0)
         {
             *p = rand() & 0xffffffff;
             p++;
             cnt--;
         }
-    }
-    if (Word_Bit_Len == 64)
-    {
+        break;
+    case 64:
         while (cnt > 0)
         {
             *p = rand() & 0xffffffffffffffff;
             p++;
             cnt--;
         }
+        break;
+    default:
+        break;
     }
 
 }
@@ -465,7 +492,14 @@ int bi_get_word_len(bigint* x)
  */
 int bi_get_bit_len(bigint* x)
 {
-    return x->wordlen * Word_Bit_Len;
+    int i = Word_Bit_Len - 1;
+    while (i > 0)
+    {
+        if (((x->a[x->wordlen - 1] >> i) & 1) == 1)
+            break;
+        i--;
+    }
+    return i + 1 + (x->wordlen - 1) * Word_Bit_Len;
 }
 
 /**
@@ -502,6 +536,7 @@ int bi_get_sign(bigint* x)
 {
     return x->sign;
 }
+
 
 
 /*********** SHOW ***********/
@@ -616,7 +651,7 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     if (*hex != NULL)
         return;
 
-    int size = (strlen(str) + 1) / (Word_Bit_Len / 4 + 1); // str byte 수 : n = strlen(str)+1 / 3, 할당할 크기 : byte 단위
+    int size = ((strlen(str) + 1) / 3); // str byte 수 : n = strlen(str)+1 / 3, 할당할 크기 : byte 단위
     word* tmp = malloc(size);   // str을 배열로 저장할 포인터 임시 변수
     int num;    // str을 띄어쓰기를 기준으로 (즉, 바이트씩) 저장할 임시 변수
     unsigned char* end; // 띄어쓰기(NULL) 끝 주소를 저장할 포인터
@@ -624,13 +659,17 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     /******************************************************************** 역순으로 저장됨
     num = strtol(str, &end, 16);
     tmp[size - 1] = num;
+
     for (int k = size - 2; k >0; k--)
     {
         num = strtol(end, &end, 16);
         tmp[k] = num;
     }
+
     num = strtol(end, NULL, 16);
     tmp[0] = num;
+
+
     for (int k = 0; k < size; k++)
     {
         printf("%02x", tmp[k]);
@@ -641,16 +680,260 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     num = strtol(str, &end, 16);  // 시작주소 s부터 띄어쓰기까지 16진수로 저장하고 end 주소를 반환
     tmp[0] = num;
 
-    for (int k = 1; k < size; k++)
+    for (int k = 1; k < size - 1; k++)
     {
         num = strtol(end, &end, 16);
         tmp[k] = num;
     }
 
-    bi_new(hex, 1);
+    num = strtol(end, NULL, 16);
+    tmp[size - 1] = num;
+
+    bi_new(hex, size);
     bi_set_by_array(hex, NON_NEGATIVE, tmp, size);
 
     free(tmp);
     tmp = NULL;
     end = NULL;
+}
+void str2word(word* dst, char* str, int array_size)
+{
+    switch (Word_Bit_Len)
+    {
+    case 8:
+        if ((strlen(str)-1) % 2 == 1)
+        {
+            if (isdigit(str[0]))
+                dst[array_size - 1] = (word)(str[0] - '0');
+            else
+                dst[array_size - 1] = (word)(str[0] - 'a' + 10);
+            for (int i = 1; i < array_size; i++)
+            {
+                if (isdigit(str[2 * i - 1]))
+                    dst[array_size - 1 - i] = (word)(str[2 * i - 1] - '0') << 4;
+                else
+                    dst[array_size - 1 - i] = (word)(str[2 * i - 1] - 'a' + 10) << 4;
+                if (isdigit(str[2 * i]))
+                    dst[array_size - 1 - i] += (word)(str[2 * i] - '0');
+                else
+                    dst[array_size - 1 - i] += (word)(str[2 * i] - 'a' +10);
+                //dst[array_size - 1 - i] = (word)((str[2 * i - 1] - '0') << 4);
+                //dst[array_size - 1 - i] += (word)(str[2 * i] - '0');
+            }
+        }
+        else
+        {
+
+            for (int i = 0; i < array_size; i++)
+            {
+                if (isdigit(str[2 * i]))
+                    dst[array_size - 1 - i] = (word)(str[2 * i] - '0') << 4;
+                else
+                    dst[array_size - 1 - i] = (word)(str[2 * i] - 'a' + 10) << 4;
+                if (isdigit(str[2 * i + 1]))
+                    dst[array_size - 1 - i] += (word)(str[2 * i + 1] - '0');
+                else
+                    dst[array_size - 1 - i] += (word)(str[2 * i + 1] - 'a' + 10);
+                //dst[array_size - 1 - i] = (word)((str[2 * i] - '0') * 4);
+                //dst[array_size - 1 - i] += (word)(str[2 * i + 1] - '0');
+            }
+        }
+        break;
+    case 32:
+
+        if ((strlen(str) - 1) % 4 == 1)
+        {
+            dst[array_size - 1] = (word)(str[0] - '0');
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[4 * i - 1] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[4 * i] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 1] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 2] - '0'));
+            }
+        }
+        else if ((strlen(str) - 1) % 4 == 2)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 4);
+            dst[array_size - 1] += (word)((str[1] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[4 * i - 2] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[4 * i - 1] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[4 * i] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 1] - '0'));
+            }
+        }
+        else if ((strlen(str) - 1) % 4 == 3)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 8);
+            dst[array_size - 1] += (word)((str[1] - '0') << 4);
+            dst[array_size - 1] += (word)((str[2] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[4 * i - 3] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[4 * i - 2] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[4 * i - 1] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[4 * i] - '0'));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[4 * i] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 1] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 2] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[4 * i + 3] - '0'));
+            }
+        }
+        break;
+    case 64:
+        //bi_new(x, array_size);
+        if (strlen(str) % 8 == 1)
+        {
+            dst[array_size - 1] = (word)(str[0] - '0');
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 1] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 3] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 4] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 5] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 6] - '0'));
+            }
+        }
+        else if (strlen(str) % 8 == 2)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 4);
+            dst[array_size - 1] += (word)((str[1] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 2] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 3] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 4] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 5] - '0'));
+            }
+        }
+        else if (strlen(str) % 8 == 3)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 8);
+            dst[array_size - 1] += (word)((str[1] - '0') << 4);
+            dst[array_size - 1] += (word)((str[2] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 3] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 2] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 3] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 4] - '0'));
+            }
+        }
+        else if (strlen(str) % 8 == 4)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 12);
+            dst[array_size - 1] += (word)((str[1] - '0') << 8);
+            dst[array_size - 1] += (word)((str[2] - '0') << 4);
+            dst[array_size - 1] += (word)((str[3] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 4] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 3] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 2] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 3] - '0'));
+            }
+        }
+        else if (strlen(str) % 8 == 5)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 16);
+            dst[array_size - 1] += (word)((str[1] - '0') << 12);
+            dst[array_size - 1] += (word)((str[2] - '0') << 8);
+            dst[array_size - 1] += (word)((str[3] - '0') << 4);
+            dst[array_size - 1] += (word)((str[4] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 5] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 4] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 3] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 2] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0'));
+            }
+        }
+        else if (strlen(str) % 4 == 6)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 20);
+            dst[array_size - 1] += (word)((str[1] - '0') << 16);
+            dst[array_size - 1] += (word)((str[2] - '0') << 12);
+            dst[array_size - 1] += (word)((str[3] - '0') << 8);
+            dst[array_size - 1] += (word)((str[4] - '0') << 4);
+            dst[array_size - 1] += (word)((str[5] - '0'));
+
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 6] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 5] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 4] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 3] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 2] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0'));
+            }
+        }
+        else if (strlen(str) % 4 == 7)
+        {
+            dst[array_size - 1] = (word)((str[0] - '0') << 24);
+            dst[array_size - 1] += (word)((str[1] - '0') << 20);
+            dst[array_size - 1] += (word)((str[2] - '0') << 16);
+            dst[array_size - 1] += (word)((str[3] - '0') << 12);
+            dst[array_size - 1] += (word)((str[4] - '0') << 8);
+            dst[array_size - 1] += (word)((str[5] - '0') << 4);
+            dst[array_size - 1] += (word)((str[6] - '0'));
+            for (int i = 1; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i - 7] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 6] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 5] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 4] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 3] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 2] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i - 1] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i] - '0'));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < array_size; i++)
+            {
+                dst[array_size - 1 - i] = (word)((str[8 * i] - '0') << 28);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 1] - '0') << 24);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 2] - '0') << 20);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 3] - '0') << 16);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 4] - '0') << 12);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 5] - '0') << 8);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 6] - '0') << 4);
+                dst[array_size - 1 - i] += (word)((str[8 * i + 7] - '0'));
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
 }
