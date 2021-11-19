@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file data.c
  * @author Ryu Jieun (ofryuji@gmail.com )
  * @author Yoon Hyejin (hyejin91655@gmail.com)
@@ -43,11 +43,11 @@ void bi_new(bigint** x, int wordlen)
 }
 
 /**
- * @brief ª�� ����
+ * @brief ª
  *
- * @param x ���� ����
+ * @param x
  *
- * @remark �ڼ��� ����
+ * @remark  ڼ
  */
 
 void bi_delete(bigint** x)
@@ -73,7 +73,7 @@ void bi_delete(bigint** x)
  * @param prev_wordlen
  * @param new_wordlen
  *
- * @remark �ڼ��� ����
+ * @remark  ڼ
  */
 
 void bi_resize(bigint** x, int prev_wordlen, int new_wordlen)
@@ -558,12 +558,12 @@ int bi_get_sign(bigint* x)
  */
 void bi_show(bigint* x)
 {
-    printf("HEX : \n");
+    printf("HEX : ");
     bi_show_hex(x);
-    printf("DEC : \n");
+    //printf("DEC : \n");
     // bi_show_dec(x);
-    printf("BIN : \n");
-    bi_show_bin(x);
+    //printf("BIN : \n");
+    //bi_show_bin(x);
 }
 
 /**
