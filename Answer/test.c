@@ -140,18 +140,30 @@ void test__()
 
 	A_file = fopen("A.txt", "r");
 	B_file = fopen("B.txt", "r");
-	//Add_result = fopen("Add_32.txt", "a+");
-	Sub_result = fopen("Sub_32.txt", "a+");
-	Mul_result = fopen("Mul_32.txt", "a+");
+	Add_result = fopen("Add.txt", "a+");
+	Sub_result = fopen("Sub.txt", "a+");
+	Mul_result = fopen("Mul.txt", "a+");
 	Mul_K_result = fopen("Mul_K.txt", "a+");
 	//Div_Q_result = fopen("Div_Q.txt", "a+");
 	//Div_R_result = fopen("Div_R.txt", "a+");
+	Squ_A_result = fopen("Squ_A.txt", "a+");
+	Squ_B_result = fopen("Squ_B.txt", "a+");
+	/*
+	//32 bit
+	Add_result = fopen("Add_32.txt", "a+");
+	Sub_result = fopen("Sub_32.txt", "a+");
+	Mul_result = fopen("Mul_32.txt", "a+");
+	Mul_K_result = fopen("Mul_K.txt", "a+");
+	Div_Q_result = fopen("Div_Q.txt", "a+");
+	Div_R_result = fopen("Div_R.txt", "a+");
 	Squ_A_result = fopen("Squ_A_32.txt", "a+");
 	Squ_B_result = fopen("Squ_B_32.txt", "a+");
+
+	*/
+
 	//fopen(Div_result, "a+");
 	while (1)
 	{
-		Add_result = fopen("Add_32.txt", "a+");
 		//Div_Q_result = fopen("Div_Q.txt", "a+");
 		//Div_R_result = fopen("Div_R.txt", "a+");
 		A_eof = fgets(A_buf, 128, A_file);
@@ -221,7 +233,6 @@ void test__()
 		//bi_delete(&SQU_B);
 		//fclose(Div_Q_result);
 		//fclose(Div_R_result);
-		fclose(Add_result);
 		memset(A_eof, 128, sizeof(char));
 		memset(B_eof, 128, sizeof(char));
 		cnt++;

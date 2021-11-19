@@ -9,7 +9,7 @@
 #include <time.h>
 #include<windows.h>
 
-#define Word_Bit_Len 32
+#define Word_Bit_Len	8
 
 
 #if Word_Bit_Len == 64
