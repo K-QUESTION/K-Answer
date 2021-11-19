@@ -28,7 +28,7 @@ void ADD(bigint** C, bigint* A, bigint* B);
 
 /********** SUBTRACTION ***********/
 void SUB_AB(bigint** C, bigint* A, bigint* B);
-void SUB_AbB(bigint** C, bigint* A, bigint* B, int b, int idx); // int b -> {0, 1}, idx -> A, B�� a  �ε���
+int SUB_AbB(bigint** C, bigint* A, bigint* B, int b, int idx); // int b -> {0, 1}, idx -> A, B�� a  �ε���
 void SUBC(bigint** C, bigint* A, bigint* B); // where WordLen(A) �� WordLen(B) and Sign(A) = Sign(B)
 void SUB(bigint** C, bigint* A, bigint* B);
 
@@ -42,12 +42,12 @@ void MULC_K(bigint** C, bigint* A, bigint* B); //Karatsuba �̸� �ٲ�?
 void DIV(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B);
-void Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B); //void Long_Division
+void Long_DIV(bigint** Q, bigint* A, bigint* B); //void Long_Division
 
 /********** SQUARING ***********/
 void AA(bigint** C, bigint* A);
 void SQUC(bigint** C, bigint* A);
-void SQUK(bigint** C, bigint* A);
+void SQUC_K(bigint** C, bigint* A);
 void SQU(bigint** C, bigint* A);
 
 /********** MOD_EXP ***********/

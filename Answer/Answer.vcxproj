@@ -140,7 +140,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AES.c" />
-    <ClCompile Include="AES_test.c" />
+    <ClCompile Include="AES_test.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="data.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="operation.c" />

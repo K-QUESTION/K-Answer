@@ -9,7 +9,7 @@
 #include <time.h>
 #include<windows.h>
 
-#define Word_Bit_Len 8
+#define Word_Bit_Len 32
 
 
 #if Word_Bit_Len == 64
@@ -32,6 +32,8 @@ typedef unsigned char		word;
 #define EQUAL_ARGUMENT				0
 #define BIGGER_SECOND_ARGUMENT		-1
 
+#define TRUE	1
+#define FALSE	2
 #ifndef max
 #define max(a,b)  (((a) > (b)) ? (a) : (b))
 #endif
