@@ -787,6 +787,7 @@ void MULC_K(bigint** C, bigint* A, bigint* B) // Fast Multiplication  //return R
 
 
 /********** DIVISION ***********/
+/********** DIVISION ***********/
 void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 {
 	if (Compare(A, B) == BIGGER_SECOND_ARGUMENT)
@@ -799,7 +800,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	}
 
 	bigint* r = NULL;	bi_new(&r, 1);	r->a[0] = 0;
-	//bigint* W = NULL;	bi_new(&W, 2);	W->a[1] = 1;	W->a[0] = 0;
+	bigint* W = NULL;	bi_new(&W, 2);	W->a[1] = 1;	W->a[0] = 0;
 	bigint* Ai = NULL;	bi_new(&Ai, 1);
 	bigint* rW = NULL;
 	bigint* rW_Ai = NULL;
@@ -810,8 +811,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	for (int i = A->wordlen - 1; i >= 0; i--)
 	{
 		Ai->a[0] = A->a[i];
-		// MULC_K(&rW, r, W);
-		bi_L_shift(&rW, r, Word_Bit_Len);
+		MULC_K(&rW, r, W);
 		ADDC(&rW_Ai, rW, Ai);
 		DIVC(&Qi, R, rW_Ai, B);
 		(*Q)->a[i] = Qi->a[0];
@@ -826,7 +826,7 @@ void DIV(bigint** Q, bigint** R, bigint* A, bigint* B)
 	bi_refine(*Q);
 
 	bi_delete(&r);
-	//bi_delete(&W);
+	bi_delete(&W);
 	bi_delete(&Ai);
 }
 
