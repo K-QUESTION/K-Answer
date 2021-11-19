@@ -11,18 +11,18 @@
  *
  */
 #include "data.h"
+void str2word(word* dst, char* str, int array_size);
 
+/*********** MEMORY ***********/
 
- /*********** MEMORY ***********/
-
-  /**
-  * @brief
-  *
-  * @param x
-  * @param wordlen
-  *
-  * @remark �ڼ��� ����
-  */
+ /**
+ * @brief
+ *
+ * @param x
+ * @param wordlen
+ *
+ * @remark  ڼ
+ */
 
 void bi_new(bigint** x, int wordlen)
 {
@@ -43,11 +43,11 @@ void bi_new(bigint** x, int wordlen)
 }
 
 /**
- * @brief ª�� ����
+ * @brief ª
  *
- * @param x ���� ����
+ * @param x
  *
- * @remark �ڼ��� ����
+ * @remark  ڼ
  */
 
 void bi_delete(bigint** x)
@@ -73,11 +73,16 @@ void bi_delete(bigint** x)
  * @param prev_wordlen
  * @param new_wordlen
  *
- * @remark �ڼ��� ����
+ * @remark  ڼ
  */
 
 void bi_resize(bigint** x, int prev_wordlen, int new_wordlen)
 {
+    if ((*x) == NULL)
+    {
+        bi_new(x, new_wordlen);
+        return;
+    }
     if ((*x)->a == NULL)
     {
         (*x)->a = (word*)malloc(sizeof(word) * new_wordlen);
@@ -213,9 +218,6 @@ void bi_set_by_string(bigint** x, int sign, char* str)  //, int base)  //string 
         tmp[2] = 0;
         (*x)->a[i] = (word)strtoul(tmp, NULL, 16);// strtoul -> str => usigned long
     }
-
-
-
     */
     switch (Word_Bit_Len)
     {
@@ -550,12 +552,12 @@ int bi_get_sign(bigint* x)
  */
 void bi_show(bigint* x)
 {
-    printf("HEX : \n");
+    printf("HEX : ");
     bi_show_hex(x);
-    printf("DEC : \n");
+    //printf("DEC : \n");
     // bi_show_dec(x);
-    printf("BIN : \n");
-    bi_show_bin(x);
+    //printf("BIN : \n");
+    //bi_show_bin(x);
 }
 
 /**
@@ -609,8 +611,6 @@ void bi_show_hex(bigint* x)
              dec[i] += bi_get_j_bit(x, j + i * 32) * (1 << j);
          }
      }
-
-
      while (len >= 0)
      {
          dec += bi_get_j_bit(x, len) * (1 << len);
@@ -659,17 +659,13 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     /******************************************************************** 역순으로 저장됨
     num = strtol(str, &end, 16);
     tmp[size - 1] = num;
-
     for (int k = size - 2; k >0; k--)
     {
         num = strtol(end, &end, 16);
         tmp[k] = num;
     }
-
     num = strtol(end, NULL, 16);
     tmp[0] = num;
-
-
     for (int k = 0; k < size; k++)
     {
         printf("%02x", tmp[k]);
@@ -696,12 +692,20 @@ void str2hex(bigint** hex, unsigned char* str)    // s길이가 길어지면 siz
     tmp = NULL;
     end = NULL;
 }
+
+word c2w(char c)
+{
+    if (isdigit(c))
+    {
+
+    }
+}
 void str2word(word* dst, char* str, int array_size)
 {
     switch (Word_Bit_Len)
     {
     case 8:
-        if ((strlen(str)-1) % 2 == 1)
+        if ((strlen(str) - 1) % 2 == 1)
         {
             if (isdigit(str[0]))
                 dst[array_size - 1] = (word)(str[0] - '0');
@@ -716,7 +720,7 @@ void str2word(word* dst, char* str, int array_size)
                 if (isdigit(str[2 * i]))
                     dst[array_size - 1 - i] += (word)(str[2 * i] - '0');
                 else
-                    dst[array_size - 1 - i] += (word)(str[2 * i] - 'a' +10);
+                    dst[array_size - 1 - i] += (word)(str[2 * i] - 'a' + 10);
                 //dst[array_size - 1 - i] = (word)((str[2 * i - 1] - '0') << 4);
                 //dst[array_size - 1 - i] += (word)(str[2 * i] - '0');
             }
