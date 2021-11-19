@@ -961,7 +961,7 @@ void Long_DIV(bigint** Q, bigint* A, bigint* B) //void Long_Division, 2 word ver
 
     bi_new(Q, 2);   // Q = 0
     (*Q)->a[0] = 0;   (*Q)->a[1] = 0;
-    bi_new(&R, 2);   // R = A[1]
+    bi_new(&R, 1);   // R = A[1]
 
     R->a[0] = A->a[1];
 
