@@ -1132,9 +1132,41 @@ void SQU(bigint** C, bigint* A)
 }
 
 /********** MOD_EXP ***********/
-void L2R() //Left to Right
+void L2R(bigint** B, bigint* A, bigint* n, bigint* M) //Left to Right
 {
+	bigint* T = NULL;
+	bi_set_one(&T);     // T <- 1
+	bigint* Q = NULL;
+	bigint* R = NULL;
 
+	int len = bi_get_bit_len(n);    // n의 비트 길이
+	for (int i = len - 1; i >= 0; i--)
+	{
+		printf("\n%d-turn\n", i);
+		bigint* TT = NULL;
+		SQUC(&TT, T); // T^2
+		bi_show(TT);
+		DIV(&Q, &R, TT, M); // R <- T^2 mod M
+		bi_show(R);
+		bi_delete(&TT);
+
+		printf("ni = %d\n", bi_get_j_bit(n, i));
+		if (bi_get_j_bit(n, i) == 1)
+		{
+			MUL(&T, R, A);  // T <- R * x : T^2 * x
+			bi_show(T);
+			DIV(&Q, &R, T, M);  // T <- T^2 * x mod M
+			bi_show(R);
+		}
+
+		bi_delete(&T);
+		bi_assign(&T, R);  // T <- (T^2 * x) mod M or T^2 mod M
+		bi_show(T);
+	}
+	bi_assign(B, T);
+	bi_delete(&T);
+	bi_delete(&Q);
+	bi_delete(&R);
 }
 void R2L() //Right to Left
 {
