@@ -1134,14 +1134,11 @@ void SQU(bigint** C, bigint* A)
 /********** MOD_EXP ***********/
 void L2R(bigint** B, bigint* A, bigint* n, bigint* M) //Left to Right
 {
-	bigint* T = NULL;
-	bi_set_one(&T);     // T <- 1
+	bigint* T = NULL;	bi_set_one(&T);     // T <- 1
 	bigint* Q = NULL;
 	bigint* R = NULL;
 
 	int len = bi_get_bit_len(n);    // n의 비트 길이
-	printf("%d", len);
-
 	for (int i = len - 1; i >= 0; --i)
 	{
 		bigint* TT = NULL;
@@ -1149,7 +1146,7 @@ void L2R(bigint** B, bigint* A, bigint* n, bigint* M) //Left to Right
 		DIV(&Q, &R, TT, M); // R <- T^2 mod M
 		bi_delete(&TT);
 
-		if (bi_get_j_bit(n, i) == 1);
+		if (bi_get_j_bit(n, i) == 1)
 		{
 			MUL(&T, R, A);  // T <- R * x : T^2 * x
 			DIV(&Q, &R, T, M);  // T <- T^2 * x mod M
@@ -1164,10 +1161,42 @@ void L2R(bigint** B, bigint* A, bigint* n, bigint* M) //Left to Right
 	bi_delete(&Q);
 	bi_delete(&R);
 }
-void R2L() //Right to Left
-{
 
+void R2L(bigint** B, bigint* A, bigint* n, bigint* M) //Left to Right
+{
+	bigint* T0 = NULL;	bi_set_one(&T0);     // T0 <- 1
+	bigint* T1 = NULL;	bi_assign(&T1, A);	// T1 <- A
+	bigint* Q = NULL;
+	bigint* R = NULL;
+
+	int len = bi_get_bit_len(n);    // n의 비트 길이
+	for (int i = 0; i < len; i++)
+	{
+		bigint* TT = NULL;
+		if (bi_get_j_bit(n, i) == 1)
+		{
+			MUL(&TT, T0, T1);  // TT <- T0 * T1
+			DIV(&Q, &R, TT, M);  // T0 * T1 mod M
+			bi_delete(&T0);
+			bi_assign(&T0, R);  // T0 <- T0 * T1 mod M
+		}
+
+		bi_delete(&TT);
+		SQUC(&TT, T1); // TT <- T1^2
+		DIV(&Q, &R, TT, M); // T1^2 mod M
+		bi_delete(&T1);
+		bi_assign(&T1, R);  // T1 <- T1^2 mod M
+
+		bi_delete(&TT);
+	}
+
+	bi_assign(B, T0);
+	bi_delete(&T0);
+	bi_delete(&T1);
+	bi_delete(&Q);
+	bi_delete(&R);
 }
+
 void Montgomery()
 {
 
