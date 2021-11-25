@@ -52,7 +52,7 @@ void SQU(bigint** C, bigint* A);
 
 /********** MOD_EXP ***********/
 void L2R(bigint** B, bigint* A, bigint* n, bigint* M); //Left to Right
-void R2L(); //Right to Left
+void R2L(bigint** B, bigint* A, bigint* n, bigint* M); //Right to Left
 void Montgomery();
 
 
