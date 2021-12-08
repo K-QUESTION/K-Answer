@@ -8,42 +8,44 @@
 
 /*********** GENERAL ***********/
 
-int CompareABS(bigint* A, bigint* B);  // ok 
-int Compare(bigint* A, bigint* B);   //ok
+int CompareABS(bigint* A, bigint* B);
+int Compare(bigint* A, bigint* B);
 
-void bi_L_shift(bigint** y, bigint* x, int nbits);  //ok
-void bi_R_shift(bigint** y, bigint* x, int nbits);  //ok
+void bi_L_shift(bigint** y, bigint* x, int nbits);
+void bi_R_shift(bigint** y, bigint* x, int nbits);
 
-void bi_reduct(bigint** dst, bigint* src, int nbits);  //ok
+void bi_reduct(bigint** dst, bigint* src, int nbits);
 
-void ABS(bigint** y, bigint* x);  //ok
+void ABS(bigint** y, bigint* x);
 
 
 
 /*********** ADDITION ************/
-void ADD_AB(bigint** C, bigint* A, bigint* B); // C: result
-int ADD_ABc(bigint** C, bigint* A, bigint* B, int c, int idx); // int c -> {0, 1}
-void ADDC(bigint** C, bigint* A, bigint* B); // where WordLen(A) �� WordLen(B) and Sign(A) = Sign(B)
+void ADD_AB(bigint** C, bigint* A, bigint* B); 
+int ADD_ABc(bigint** C, bigint* A, bigint* B, int c, int idx); 
+void ADDC(bigint** C, bigint* A, bigint* B); 
 void ADD(bigint** C, bigint* A, bigint* B);
+void ADD_CA(bigint** C, bigint* A);
 
 /********** SUBTRACTION ***********/
 void SUB_AB(bigint** C, bigint* A, bigint* B);
-int SUB_AbB(bigint** C, bigint* A, bigint* B, unsigned int b, int idx); // int b -> {0, 1}, idx -> A, B�� a  �ε���
-void SUBC(bigint** C, bigint* A, bigint* B); // where WordLen(A) �� WordLen(B) and Sign(A) = Sign(B)
+int SUB_AbB(bigint** C, bigint* A, bigint* B, unsigned int b, int idx);
+void SUBC(bigint** C, bigint* A, bigint* B);
 void SUB(bigint** C, bigint* A, bigint* B);
+void SUB_CA(bigint** C, bigint* A);
 
 /********** MULTIPLICATION ***********/
-void MUL_AB(bigint** C, bigint* A, bigint* B, int idxA, int idxB);  // A, B: 1 word 
+void MUL_AB(bigint** C, bigint* A, bigint* B, int idxA, int idxB);
 void MUL(bigint** C, bigint* A, bigint* B);
-void MULC(bigint** C, bigint* A, bigint* B);  //Schoolbook
-void MULC_K(bigint** C, bigint* A, bigint* B); //Karatsuba �̸� �ٲ�?
+void MULC(bigint** C, bigint* A, bigint* B);
+void MULC_K(bigint** C, bigint* A, bigint* B);
 
 /********** DIVISION ***********/
 void Binary_Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIV(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B);
-void Long_DIV(bigint** Q, bigint* A, bigint* B); //void Long_Division
+void Long_DIV(bigint** Q, bigint* A, bigint* B);
 
 /********** SQUARING ***********/
 void AA(bigint** C, bigint* A);

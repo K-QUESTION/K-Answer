@@ -567,7 +567,7 @@ void test_div()
 			printf("\n * Word_bit length = %d\n", Word_Bit_Len);
 
 			printf("\n [Running Time]\n");
-			printf(" Div Naive   -> Total Performance Time: %.3lf sec\n", div_clock);
+			printf(" Div Multi-Precision   -> Total Performance Time: %.3lf sec\n", div_clock);
 			break;
 		}
 		bi_set_by_string(&A, NON_NEGATIVE, &A_buf[2]);

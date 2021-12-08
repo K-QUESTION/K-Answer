@@ -13,7 +13,6 @@
 #include "data.h"
 #include "operation.h"
 
-void str2word(word* dst, char* str, int array_size);
 
 /*********** MEMORY ***********/
 
@@ -206,6 +205,68 @@ void bi_set_by_array(bigint** x, int sign, word* a, int wordlen)
     (*x)->wordlen = wordlen;
     array_copy((*x)->a, a, wordlen);
 
+}
+
+/**
+ * @brief A function that converts the data type of a string into words.
+ *
+ * @param c String to convert data types [charater type variable]
+ *
+ * @details If the string 'c' is a number, return the value subtracted by the ASCII value "0".
+ * If the string is not a number, return the value subtracted by the ASCII value "a" and added by th ASCII value "10".
+ */
+word c2w(char c)
+{
+    if ('0' <= (c) && c <= '9')
+    {
+        return ((word)(c)-(word)('0'));
+    }
+    else
+        return ((word)(c)-(word)('a') + (word)(10));
+}
+
+/**
+ * @brief A function that converts a string into a word array.
+ *
+ * @param dst Array to store the converted value [Structure pointer variable]
+ * @param str String to be converted [Structure pointer variable]
+ * @param array_size The size of the array to be assigned according to the string length [integer type variable]
+ *
+ * @details Define hex_bits as Word_Bit_Len divided by 4, 4 is the size of the char type.
+ * If the size of the string is not divided by hex_bits,
+ * store the first remaining values of str in the top word of the array,
+ * and store the divided parts in order from the remaining array.
+ * If the size of the string is divided by hex_bits,
+ * values of str are stored in order from the top word of the array.
+ */
+void str2word(word* dst, char* str, int array_size)
+{
+    int hex_bits = Word_Bit_Len / 4;
+    int remain = (strlen(str) - 1) % hex_bits;
+    if (remain != 0)
+    {
+        for (int i = 0; i < remain; i++)
+        {
+            dst[array_size - 1] += c2w(str[i]) << 4 * (remain - 1 - i);
+        }
+        for (int i = 1; i < array_size; i++)
+        {
+            for (int j = 0; j < hex_bits; j++)
+            {
+                dst[array_size - 1 - i] += c2w(str[hex_bits * i - (hex_bits - remain) + j]) << 4 * (hex_bits - j - 1);
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < array_size; i++)
+        {
+            for (int j = 0; j < hex_bits; j++)
+            {
+                dst[array_size - 1 - i] += c2w(str[hex_bits * i + j]) << 4 * (hex_bits - j - 1);
+            }
+        }
+    }
 }
 
 /**
@@ -685,66 +746,4 @@ void bi_show_bin(bigint* x)  //max len
         len--;
     }
     printf("\n");
-}
-
-/**
- * @brief A function that converts the data type of a string into words.
- *
- * @param c String to convert data types [charater type variable]
- *
- * @details If the string 'c' is a number, return the value subtracted by the ASCII value "0".
- * If the string is not a number, return the value subtracted by the ASCII value "a" and added by th ASCII value "10".
- */
-word c2w(char c)
-{
-    if ('0'<= (c) && c <= '9')
-    {
-        return ((word)(c) - (word)('0'));
-    }
-    else
-        return ((word)(c)-(word)('a')+(word)(10));
-}
-
-/**
- * @brief A function that converts a string into a word array.
- *
- * @param dst Array to store the converted value [Structure pointer variable]
- * @param str String to be converted [Structure pointer variable]
- * @param array_size The size of the array to be assigned according to the string length [integer type variable]
- *
- * @details Define hex_bits as Word_Bit_Len divided by 4, 4 is the size of the char type.
- * If the size of the string is not divided by hex_bits,
- * store the first remaining values of str in the top word of the array,
- * and store the divided parts in order from the remaining array.
- * If the size of the string is divided by hex_bits,
- * values of str are stored in order from the top word of the array.
- */
-void str2word(word* dst, char* str, int array_size)
-{
-    int hex_bits = Word_Bit_Len / 4;
-    int remain = (strlen(str) - 1) % hex_bits;
-    if (remain != 0)
-    {
-        for (int i = 0; i < remain; i++)
-        {
-            dst[array_size - 1] += c2w(str[i]) << 4 * (remain - 1 - i);
-        }
-        for (int i = 1; i < array_size; i++)
-        {
-            for (int j = 0; j < hex_bits; j++)
-            {
-                dst[array_size - 1 - i] += c2w(str[hex_bits * i - (hex_bits - remain) + j]) << 4 * (hex_bits - j - 1);
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < array_size; i++)
-        {
-            for (int j = 0; j < hex_bits; j++)
-            {
-                dst[array_size - 1 - i] += c2w(str[hex_bits * i + j]) << 4 * (hex_bits - j - 1);
-            }
-        }
-    }
 }

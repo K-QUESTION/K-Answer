@@ -12,7 +12,9 @@ void bi_resize(bigint** x, int prev_wordlen, int new_wordlen);
 /*********** SET ***********/
 void bi_set_one(bigint** x);  
 void bi_set_zero(bigint** x); 
-void bi_set_by_array(bigint** x, int sign, word* a, int worlen);  
+void bi_set_by_array(bigint** x, int sign, word* a, int worlen);
+void str2word(word* dst, char* str, int array_size);
+word c2w(char c);
 void bi_set_by_string(bigint** x, int sign, char* str); 
 void bi_assign(bigint** dst, bigint* src);  
 void bi_gen_rand(bigint** x, int sign, int wordlen); 

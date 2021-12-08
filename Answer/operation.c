@@ -581,7 +581,7 @@ void SUB(bigint** C, bigint* A, bigint* B)
  * @param C A structure to subtract and store the subtracted value [Structure double pointer variable]
  * @param A Structure to be subtracted [Structure pointer variable]
  */
-void SUB_CA(bigint** C, bigint* A)       //C-A를 C에 입력하도록 하는 함수.
+void SUB_CA(bigint** C, bigint* A)       //C <- C - A
 {
 	bigint* temp = NULL;
 	bi_assign(&temp, *C);
