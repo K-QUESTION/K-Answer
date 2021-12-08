@@ -1,4 +1,4 @@
-#ifndef _OPERATION_H_
+﻿#ifndef _OPERATION_H_
 #define _OPERATION_H_
 #include "type.h"
 #include "data.h"
@@ -28,7 +28,7 @@ void ADD(bigint** C, bigint* A, bigint* B);
 
 /********** SUBTRACTION ***********/
 void SUB_AB(bigint** C, bigint* A, bigint* B);
-int SUB_AbB(bigint** C, bigint* A, bigint* B, int b, int idx); // int b -> {0, 1}, idx -> A, B�� a  �ε���
+int SUB_AbB(bigint** C, bigint* A, bigint* B, unsigned int b, int idx); // int b -> {0, 1}, idx -> A, B�� a  �ε���
 void SUBC(bigint** C, bigint* A, bigint* B); // where WordLen(A) �� WordLen(B) and Sign(A) = Sign(B)
 void SUB(bigint** C, bigint* A, bigint* B);
 
@@ -39,6 +39,7 @@ void MULC(bigint** C, bigint* A, bigint* B);  //Schoolbook
 void MULC_K(bigint** C, bigint* A, bigint* B); //Karatsuba �̸� �ٲ�?
 
 /********** DIVISION ***********/
+void Binary_Long_DIV(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIV(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVC(bigint** Q, bigint** R, bigint* A, bigint* B);
 void DIVCC(bigint** Q, bigint** R, bigint* A, bigint* B);
@@ -53,7 +54,7 @@ void SQU(bigint** C, bigint* A);
 /********** MOD_EXP ***********/
 void L2R(bigint** B, bigint* A, bigint* n, bigint* M); //Left to Right
 void R2L(bigint** B, bigint* A, bigint* n, bigint* M); //Right to Left
-void Montgomery();
+void Montgomery(bigint** B, bigint* A, bigint* n, bigint* M);
 
 
 #endif  //  !_OPERATION_H_
