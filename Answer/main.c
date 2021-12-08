@@ -12,8 +12,8 @@
  * @author Yoon Hyejin (hyejin91655@gmail.com)
  * @author Kim Taehee (Intern)(kth0305a@kookmin.ac.kr)
  * @version 1.0.0
- * @date 2021-11-04
- * @copyright Copyright (c) 2021
+ * @date 2021-12-08
+ * @copyright Copyright Question 2021
  */
 
  /** 
@@ -55,7 +55,7 @@
   * @version 1.0.0
   * @date 2021-12-08
   *
-  * @copyright Copyright (c) 2021
+  * @copyright Copyright Question 2021
   *
   */
 
